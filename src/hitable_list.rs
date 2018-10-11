@@ -1,13 +1,11 @@
 use hitable::{Hitable, HitRecord};
 use ray::{Ray};
 
-pub struct HitableList {
-    list: Vec<Hitable>,
-}
+pub type HitableList = Vec<Box<Hitable>>;
 
 impl Hitable for HitableList {
-    fn hit(self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        self.list.iter().fold(None, |acc, item| {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        self.iter().fold(None, |acc, item| {
             match acc {
                 Some(x) => Some(x),
                 None => {

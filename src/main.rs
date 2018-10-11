@@ -7,6 +7,7 @@ mod sphere;
 use std::io::{self};
 use vec3::{Vec3};
 use ray::{Ray};
+use hitable::{Hitable};
 use hitable_list::{HitableList};
 use sphere::{Sphere};
 
@@ -18,9 +19,9 @@ fn background(r: &Ray) -> Vec3 {
 
 fn color(r: &Ray, world: &HitableList) -> Vec3 {
     let t_min = 0.01;
-    let t_max = 1000;
+    let t_max = 1000.;
     match world.hit(r, t_min, t_max) {
-        Some(_) => Vec3::new(1., 0., 0.),
+        Some(rec) => (1. + rec.normal) / 2.,
         None => background(r),
     }
 }
@@ -35,14 +36,12 @@ fn main() -> io::Result<()> {
 
     println!("P3\n{} {}\n255", nx, ny);
 
-    let list = vec!([
-        Sphere {
+    let world: HitableList = vec![
+        Box::new(Sphere {
             center: Vec3::new(0., 0. , -2.),
-            radius: 0.5,
-        }
-    ]);
-
-    let world = HitableList { list };
+            radius: 1.0,
+        })
+    ];
 
     for j in (0..ny).rev() {
         for i in 0..nx {

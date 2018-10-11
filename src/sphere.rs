@@ -3,19 +3,19 @@ use vec3::{Vec3};
 use ray::{Ray};
 
 pub struct Sphere {
-    center: Vec3,
-    radius: f64,
+    pub center: Vec3,
+    pub radius: f64,
 }
 
 impl Hitable for Sphere {
-    fn hit(self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = r.origin - self.center;
         let a = r.direction.dot(r.direction);
         let b = oc.dot(r.direction);
         let c = oc.dot(oc) - self.radius.powi(2);
         let discriminant = b.powi(2) - a * c;
 
-        if discriminant > 0 {
+        if discriminant > 0. {
             let t1 = (-b - (b * b - a * c)).sqrt() / a;
 
             if t1 < t_max && t1 > t_min {
