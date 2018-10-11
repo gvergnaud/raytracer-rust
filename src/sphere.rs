@@ -16,7 +16,7 @@ impl Hitable for Sphere {
         let discriminant = b.powi(2) - a * c;
 
         if discriminant > 0. {
-            let t1 = (-b - (b * b - a * c)).sqrt() / a;
+            let t1 = (-b - (b * b - a * c).sqrt()) / a;
 
             if t1 < t_max && t1 > t_min {
                 let point = r.point_at_parameter(t1);
@@ -27,7 +27,7 @@ impl Hitable for Sphere {
                 });
             }
 
-            let t2 = (-b + (b * b - a * c)).sqrt() / a;
+            let t2 = (-b + (b * b - a * c).sqrt()) / a;
 
             if t2 < t_max && t2 > t_min {
                 let point = r.point_at_parameter(t2);

@@ -40,6 +40,10 @@ fn main() -> io::Result<()> {
         Box::new(Sphere {
             center: Vec3::new(0., 0. , -2.),
             radius: 1.0,
+        }),
+        Box::new(Sphere {
+            center: Vec3::new(0., -100.5 , -1.),
+            radius: 100.0,
         })
     ];
 
