@@ -6,6 +6,7 @@ mod hitable;
 mod hitable_list;
 mod sphere;
 mod material;
+mod camera;
 
 use rand::Rng;
 
@@ -18,7 +19,8 @@ use ray::{Ray};
 use hitable::{Hitable};
 use hitable_list::{HitableList};
 use sphere::{Sphere};
-use material::{MaterialRecord, Lambertian, Metal};
+use material::{Lambertian, Metal};
+use camera::{Camera};
 
 fn background(r: &Ray) -> Vec3 {
     let unit_direction = r.direction.unit_vector();
@@ -43,14 +45,9 @@ fn color(r: &Ray, world: &HitableList, depth: u64) -> Vec3 {
 }
 
 fn main() -> io::Result<()> {
-    let nx = 200;
-    let ny = 100;
+    let nx = 500;
+    let ny = 300;
     let ns = 100;
-
-    let lower_left_corner = Vec3::new(-2., -1., -1.);
-    let horizontal = Vec3::new(4., 0., 0.);
-    let vertical = Vec3::new(0., 2., 0.);
-    let origin = Vec3::new(0., 0., 0.);
 
     println!("P3\n{} {}\n255", nx, ny);
 
@@ -69,17 +66,25 @@ fn main() -> io::Result<()> {
             Vec3::new(1., 0., -1.),
             0.5,
             Arc::new(
-                Metal::new(Vec3::new(0.8, 0.6, 0.2), 0.)
+                Metal::new(Vec3::new(0.8, 0.6, 0.2), 0.2)
             ),
         )),
         Box::new(Sphere::new(
             Vec3::new(-1., 0., -1.),
             0.5,
             Arc::new(
-                Metal::new(Vec3::new(0.8, 0.8, 0.8), 0.)
+                Metal::new(Vec3::new(0.8, 0.8, 0.8), 0.8)
             ),
         )),
     ];
+
+    let camera = Camera::new(
+        Vec3::new(-2., 2., 1.),
+        Vec3::new(0., 0., -1.),
+        Vec3::new(0., 1., 0.),
+        30.,
+        (nx as f64) / (ny as f64)
+    );
 
     for j in (0..ny).rev() {
         for i in 0..nx {
@@ -90,10 +95,7 @@ fn main() -> io::Result<()> {
                 let u = ((i as f64) + rng.gen::<f64>()) / (nx as f64);
                 let v = ((j as f64) + rng.gen::<f64>()) / (ny as f64);
 
-                let r = Ray {
-                    origin: origin,
-                    direction: lower_left_corner + u * horizontal + v * vertical,
-                };
+                let r = camera.get_ray(u, v);
 
                 col = col + color(&r, &world, 0);
             }
