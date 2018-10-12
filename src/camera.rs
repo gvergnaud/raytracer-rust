@@ -9,7 +9,7 @@ fn random_point_in_unit_disk() -> Vec3 {
     let mut p: Vec3;
     loop {
         p = 2. * Vec3::new(rng.gen(), rng.gen(), 0.) - Vec3::new(1., 1., 0.);
-        if (p.dot(p) < 1.0) { break; }
+        if p.dot(p) < 1.0 { break; }
     }
     p
 }
