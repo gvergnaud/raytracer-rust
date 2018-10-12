@@ -3,13 +3,16 @@ mod ray;
 mod hitable;
 mod hitable_list;
 mod sphere;
+mod material;
 
 use std::io::{self};
+use std::sync::Arc;
 use vec3::{Vec3};
 use ray::{Ray};
 use hitable::{Hitable};
 use hitable_list::{HitableList};
 use sphere::{Sphere};
+use material::{MaterialRecord, Lambertian};
 
 fn background(r: &Ray) -> Vec3 {
     let unit_direction = r.direction.unit_vector();
@@ -17,11 +20,18 @@ fn background(r: &Ray) -> Vec3 {
     Vec3::new(1., 1., 1.) * (1. - t) + Vec3::new(0.5, 0.7, 1.) * t
 }
 
-fn color(r: &Ray, world: &HitableList) -> Vec3 {
+fn color(r: &Ray, world: &HitableList, depth: u64) -> Vec3 {
     let t_min = 0.01;
     let t_max = 1000.;
     match world.hit(r, t_min, t_max) {
-        Some(rec) => (1. + rec.normal) / 2.,
+        Some(rec) => {
+            match (depth < 50, (*rec.material).scatter(&r, &rec)) {
+                (true, Some(MaterialRecord { scattered, attenuation })) => {
+                    attenuation * color(&scattered, &world, depth + 1)
+                },
+                _ => Vec3::fromf(0.),
+            }
+        },
         None => background(r),
     }
 }
@@ -37,14 +47,16 @@ fn main() -> io::Result<()> {
     println!("P3\n{} {}\n255", nx, ny);
 
     let world: HitableList = vec![
-        Box::new(Sphere {
-            center: Vec3::new(0., 0. , -2.),
-            radius: 1.0,
-        }),
-        Box::new(Sphere {
-            center: Vec3::new(0., -100.5 , -1.),
-            radius: 100.0,
-        })
+        Box::new(Sphere::new(
+            Vec3::new(0., 0. , -2.),
+            1.0,
+            Arc::new(Lambertian { albedo: Vec3::new(1.0, 1.0, 1.0) }),
+        )),
+        Box::new(Sphere::new(
+            Vec3::new(0., -100.5 , -1.),
+            100.0,
+            Arc::new(Lambertian { albedo: Vec3::new(1.0, 1.0, 1.0) }),
+        ))
     ];
 
     for j in (0..ny).rev() {
@@ -57,9 +69,9 @@ fn main() -> io::Result<()> {
                 direction: lower_left_corner + u * horizontal + v * vertical,
             };
 
-            let col = color(&r, &world);
+            let col = color(&r, &world, 0);
 
-            let rgb = col * 255.99;
+            let rgb = (col * 255.99).sqrt();
 
             println!("{} {} {}", rgb.r() as u32, rgb.g() as u32, rgb.b() as u32);
         }

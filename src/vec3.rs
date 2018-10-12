@@ -69,6 +69,10 @@ impl Vec3 {
         let l = self.length();
         self / (Vec3 { x: l, y: l, z: l })
     }
+
+    pub fn sqrt(self) -> Vec3 {
+        Vec3::new(self.x.sqrt(), self.y.sqrt(), self.z.sqrt())
+    }
 }
 
 impl Add for Vec3 {

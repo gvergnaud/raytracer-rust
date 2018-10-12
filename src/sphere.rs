@@ -1,10 +1,23 @@
+use std::sync::Arc;
 use hitable::{Hitable, HitRecord};
 use vec3::{Vec3};
 use ray::{Ray};
+use material::{Material};
 
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f64,
+    pub material: Arc<Material>,
+}
+
+impl Sphere {
+    pub fn new(center: Vec3, radius: f64, material: Arc<Material>) -> Self {
+        Sphere {
+            center,
+            radius,
+            material,
+        }
+    }
 }
 
 impl Hitable for Sphere {
@@ -24,6 +37,7 @@ impl Hitable for Sphere {
                     t: t1,
                     point,
                     normal: (point - self.center) / self.radius,
+                    material: &*self.material,
                 });
             }
 
@@ -35,6 +49,7 @@ impl Hitable for Sphere {
                     t: t2,
                     point,
                     normal: (point - self.center) / self.radius,
+                    material: &*self.material,
                 });
             }
         }
