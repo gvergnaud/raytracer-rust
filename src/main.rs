@@ -83,7 +83,8 @@ fn main() -> io::Result<()> {
         Vec3::new(0., 0., -1.),
         Vec3::new(0., 1., 0.),
         30.,
-        (nx as f64) / (ny as f64)
+        (nx as f64) / (ny as f64),
+        0.5
     );
 
     for j in (0..ny).rev() {
