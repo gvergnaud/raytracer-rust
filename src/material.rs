@@ -1,4 +1,5 @@
 extern crate rand;
+use self::rand::Rng;
 use ray::{Ray};
 use hitable::{HitRecord};
 use vec3::{Vec3};
@@ -15,14 +16,16 @@ pub trait Material {
 fn random_point_in_unit_sphere() -> Vec3 {
     let mut point: Vec3;
     let mut rng = rand::thread_rng();
-    let x: f64 = rng.gen();
-    let y: f64 = rng.gen();
-    let z: f64 = rng.gen();
+
     loop {
-        point = Vec3::new(x, y, z);
+        point = Vec3::new(rng.gen(), rng.gen(), rng.gen());
         if point.length() < 1. { break; }
     }
     point
+}
+
+fn reflect(vec: Vec3, normal: Vec3) -> Vec3 {
+    vec - 2. * vec.dot(normal) * normal
 }
 
 pub struct Lambertian {
@@ -38,14 +41,49 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, r: &Ray, rec: &HitRecord) -> Option<MaterialRecord> {
+    fn scatter(&self, _r: &Ray, rec: &HitRecord) -> Option<MaterialRecord> {
         Some(MaterialRecord {
             scattered: Ray {
                 origin: rec.point,
-                direction: rec.point + rec.normal + random_point_in_unit_sphere(),
+                direction: rec.normal + random_point_in_unit_sphere(),
             },
             attenuation: self.albedo,
         })
 
+    }
+}
+
+
+pub struct Metal {
+    pub albedo: Vec3,
+    pub fuzz: f64,
+}
+
+impl Metal {
+    pub fn new(albedo: Vec3, fuzz: f64) -> Self {
+        Metal {
+            albedo,
+            fuzz,
+        }
+    }
+}
+
+impl Material for Metal {
+    fn scatter(&self, r: &Ray, rec: &HitRecord) -> Option<MaterialRecord> {
+        let reflected = reflect(r.direction.unit_vector(), rec.normal);
+
+        let scattered = Ray {
+            origin: rec.point,
+            direction: reflected + self.fuzz * random_point_in_unit_sphere()
+        };
+
+        if scattered.direction.dot(rec.normal) > 0. {
+            Some(MaterialRecord {
+                scattered,
+                attenuation: self.albedo
+            })
+        } else {
+            None
+        }
     }
 }
