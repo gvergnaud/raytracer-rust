@@ -15,10 +15,10 @@ fn random_point_in_unit_disk() -> Vec3 {
 }
 
 pub struct Camera {
-    pub origin: Vec3,
-    pub lower_left_corner: Vec3,
-    pub horizontal: Vec3,
-    pub vertical: Vec3,
+    origin: Vec3,
+    lower_left_corner: Vec3,
+    horizontal: Vec3,
+    vertical: Vec3,
     lens_radius: f64,
     u: Vec3,
     v: Vec3,
@@ -70,7 +70,8 @@ impl Camera {
 
         let ray_origin = self.origin + offset;
 
-        let point_on_screen = self.lower_left_corner
+        let point_on_screen =
+            self.lower_left_corner
             + self.horizontal * u
             + self.vertical * v;
 

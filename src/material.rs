@@ -4,15 +4,6 @@ use ray::{Ray};
 use hitable::{HitRecord};
 use vec3::{Vec3};
 
-pub struct MaterialRecord {
-    pub scattered: Ray,
-    pub attenuation: Vec3,
-}
-
-pub trait Material {
-    fn scatter(&self, r: &Ray, rec: &HitRecord) -> Option<MaterialRecord>;
-}
-
 fn random_point_in_unit_sphere() -> Vec3 {
     let mut point: Vec3;
     let mut rng = rand::thread_rng();
@@ -26,6 +17,30 @@ fn random_point_in_unit_sphere() -> Vec3 {
 
 fn reflect(vec: Vec3, normal: Vec3) -> Vec3 {
     vec - 2. * vec.dot(normal) * normal
+}
+
+fn refract(vec: Vec3, normal: Vec3, refraction_indices_ratio: f64) -> Option<Vec3> {
+    let uv = vec.unit_vector();
+    let dt = uv.dot(normal);
+    let discriminant =
+        1.0 - refraction_indices_ratio.powi(2) * (1.0 - dt.powi(2));
+
+    if discriminant > 0. {
+        Some(
+            refraction_indices_ratio * (uv - normal * dt) - normal * discriminant.sqrt()
+        )
+    } else {
+        None
+    }
+}
+
+pub struct MaterialRecord {
+    pub scattered: Ray,
+    pub attenuation: Vec3,
+}
+
+pub trait Material {
+    fn scatter(&self, r: &Ray, rec: &HitRecord) -> Option<MaterialRecord>;
 }
 
 pub struct Lambertian {
@@ -84,6 +99,60 @@ impl Material for Metal {
             })
         } else {
             None
+        }
+    }
+}
+
+pub struct Dielectric {
+    refraction_index: f64,
+}
+
+impl Dielectric {
+    pub fn new(refraction_index: f64) -> Self {
+        Dielectric {
+            refraction_index,
+        }
+    }
+}
+
+impl Material for Dielectric {
+    fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<MaterialRecord> {
+        let is_ray_inside_object = ray.direction.dot(rec.normal) > 0.;
+
+        // outward normal is the normal pointing in the opposite
+        // direction of the ray
+        let outward_normal =
+            if is_ray_inside_object { -rec.normal }
+            else { rec.normal };
+
+        let refraction_ratio =
+            if is_ray_inside_object { self.refraction_index }
+            else { 1. / self.refraction_index };
+
+
+        match refract(
+            ray.direction,
+            outward_normal,
+            refraction_ratio
+        ) {
+            Some(refracted) => Some(
+                MaterialRecord {
+                    scattered: Ray {
+                        origin: rec.point,
+                        direction: refracted,
+                    },
+                    attenuation: Vec3::fromf(1.),
+                }
+            ),
+            None => Some(
+                MaterialRecord {
+                    scattered: Ray {
+                        origin: rec.point,
+                        direction: reflect(ray.direction, rec.normal),
+                    },
+                    attenuation: Vec3::fromf(1.),
+                }
+            ),
         }
     }
 }

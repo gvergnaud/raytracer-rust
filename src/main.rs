@@ -3,8 +3,6 @@ extern crate rand;
 mod vec3;
 mod ray;
 mod hitable;
-mod hitable_list;
-mod sphere;
 mod material;
 mod camera;
 
@@ -16,10 +14,8 @@ use std::f64;
 
 use vec3::{Vec3};
 use ray::{Ray};
-use hitable::{Hitable};
-use hitable_list::{HitableList};
-use sphere::{Sphere};
-use material::{Lambertian, Metal};
+use hitable::{Hitable, HitableList, Sphere};
+use material::{Lambertian, Metal, Dielectric};
 use camera::{Camera};
 
 fn background(r: &Ray) -> Vec3 {
@@ -45,22 +41,22 @@ fn color(r: &Ray, world: &HitableList, depth: u64) -> Vec3 {
 }
 
 fn main() -> io::Result<()> {
-    let nx = 500;
+    let nx = 600;
     let ny = 300;
-    let ns = 100;
+    let ns = 150;
 
     println!("P3\n{} {}\n255", nx, ny);
 
     let world: HitableList = vec![
         Box::new(Sphere::new(
-            Vec3::new(0., 0., -1.),
-            0.5,
-            Arc::new(Lambertian::new(Vec3::new(0.8, 0.3, 0.3))),
-        )),
-        Box::new(Sphere::new(
             Vec3::new(0., -100.5 , -1.),
             100.0,
             Arc::new(Lambertian::new(Vec3::new(0.8, 0.8, 0.8))),
+        )),
+        Box::new(Sphere::new(
+            Vec3::new(0., 0., -1.),
+            0.5,
+            Arc::new(Dielectric::new(1.5)),
         )),
         Box::new(Sphere::new(
             Vec3::new(1., 0., -1.),
@@ -79,10 +75,10 @@ fn main() -> io::Result<()> {
     ];
 
     let camera = Camera::new(
-        Vec3::new(-2., 2., 1.),
+        Vec3::new(0., 0., 1.),
         Vec3::new(0., 0., -1.),
         Vec3::new(0., 1., 0.),
-        30.,
+        50.,
         (nx as f64) / (ny as f64),
         0.5
     );
