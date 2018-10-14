@@ -40,47 +40,141 @@ fn color(r: &Ray, world: &HitableList, depth: u64) -> Vec3 {
     }
 }
 
-fn main() -> io::Result<()> {
-    let nx = 600;
-    let ny = 300;
-    let ns = 150;
+fn create_world() -> HitableList {
+    let beige = Vec3::new(246., 211., 195.) / 255.;
+    let brown = Vec3::new(163., 82., 51.) / 255.;
 
-    println!("P3\n{} {}\n255", nx, ny);
+    let colors = [
+        Vec3::new(139., 75., 98.) / 255.,
+        Vec3::new(187., 111., 107.) / 255.,
+        Vec3::new(234., 150., 116.) / 255.,
+        Vec3::new(252., 188., 128.) / 255.,
+        Vec3::new(247., 226., 156.) / 255.,
+        beige,
+        brown,
+    ];
 
-    let world: HitableList = vec![
+    let mut world : HitableList;
+
+    let intersects_with_main_spheres = |new_center: Vec3, new_radius: f64| {
+        [
+            (Vec3::new(0., 0., -1.), 0.7),
+            (Vec3::new(-1., 0., -1.), 0.7),
+            (Vec3::new(1., 0., -1.), 0.7),
+        ].iter().fold(false, |acc, (center, radius)| {
+            if acc { return acc };
+            let distance = (new_center - center).length();
+            distance < new_radius || distance < *radius
+        })
+    };
+
+    let random_color_and_position = || {
+        let mut rng = rand::thread_rng();
+        let mut x : f64;
+        let mut z : f64;
+        loop {
+            x = rng.gen_range::<f64>(-5., 5.);
+            z = rng.gen_range::<f64>(-5., 5.);
+            if !intersects_with_main_spheres(Vec3::new(x, -0.3, z), 0.2) { break; }
+        }
+
+        (
+            colors[rng.gen_range::<u64>(0, colors.len() as u64) as usize],
+            x,
+            z,
+        )
+    };
+
+    world = vec![
         Box::new(Sphere::new(
             Vec3::new(0., -100.5 , -1.),
             100.0,
-            Arc::new(Lambertian::new(Vec3::new(0.8, 0.8, 0.8))),
+            Arc::new(
+                Lambertian::new(Vec3::new(0.8, 0.8, 0.8))
+            ),
         )),
         Box::new(Sphere::new(
             Vec3::new(0., 0., -1.),
             0.5,
-            Arc::new(Dielectric::new(1.5)),
-        )),
-        Box::new(Sphere::new(
-            Vec3::new(1., 0., -1.),
-            0.5,
             Arc::new(
-                Metal::new(Vec3::new(0.8, 0.6, 0.2), 0.2)
+                Lambertian::new(Vec3::new(139., 75., 98.) / 255.)
             ),
         )),
         Box::new(Sphere::new(
             Vec3::new(-1., 0., -1.),
             0.5,
             Arc::new(
-                Metal::new(Vec3::new(0.8, 0.8, 0.8), 0.8)
+                Dielectric::new(1.5)
+            ),
+        )),
+        Box::new(Sphere::new(
+            Vec3::new(1., 0., -1.),
+            0.5,
+            Arc::new(
+                Metal::new(beige, 0.2)
             ),
         )),
     ];
 
+    for _ in 0..50 {
+        let (color, x, z) = random_color_and_position();
+        world.push(Box::new(
+            Sphere::new(
+                Vec3::new(x, -0.3, z),
+                0.2,
+                Arc::new(
+                    Lambertian::new(color)
+                )
+            )
+        ));
+    }
+
+    for _ in 0..25 {
+        let (color, x, z) = random_color_and_position();
+        let fuzz = rand::thread_rng().gen::<f64>();
+        world.push(Box::new(
+            Sphere::new(
+                Vec3::new(x, -0.3, z),
+                0.2,
+                Arc::new(
+                    Metal::new(color, fuzz)
+                )
+            )
+        ));
+    }
+
+    for _ in 0..15 {
+        let (_, x, z) = random_color_and_position();
+        world.push(Box::new(
+            Sphere::new(
+                Vec3::new(x, -0.3, z),
+                0.2,
+                Arc::new(
+                    Dielectric::new(1.5)
+                )
+            )
+        ));
+    }
+
+    world
+}
+
+fn main() -> io::Result<()> {
+    let nx = 600;
+    let ny = 400;
+    let ns = 150;
+
+    println!("P3\n{} {}\n255", nx, ny);
+
+    let world = create_world();
+
     let camera = Camera::new(
-        Vec3::new(0., 0., 1.),
-        Vec3::new(0., 0., -1.),
+        Vec3::new(2.5, 0.5, 0.5),
+        Vec3::new(0., -0.2, -1.),
         Vec3::new(0., 1., 0.),
-        50.,
+        35.,
         (nx as f64) / (ny as f64),
-        0.5
+        0.05
     );
 
     for j in (0..ny).rev() {
