@@ -111,7 +111,7 @@ fn create_world() -> HitableList {
             Vec3::new(1., 0., -1.),
             0.5,
             Arc::new(
-                Metal::new(beige, 0.2)
+                Metal::new(beige, 0.)
             ),
         )),
     ];
