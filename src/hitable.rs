@@ -35,6 +35,48 @@ impl Hitable for HitableList {
     }
 }
 
+fn hit_sphere<'a>(
+    center: Vec3,
+    radius: f64,
+    material: &'a Material,
+    ray: &Ray,
+    t_min: f64,
+    t_max: f64,
+) -> Option<HitRecord<'a>> {
+    let oc = ray.origin - center;
+        let a = ray.direction.dot(ray.direction);
+        let b = oc.dot(ray.direction);
+        let c = oc.dot(oc) - radius.powi(2);
+        let discriminant = b.powi(2) - a * c;
+
+        if discriminant > 0. {
+            let t1 = (-b - (b.powi(2) - a * c).sqrt()) / a;
+
+            if t1 < t_max && t1 > t_min {
+                let point = ray.point_at_parameter(t1);
+                return Some(HitRecord {
+                    t: t1,
+                    point,
+                    normal: (point - center) / radius,
+                    material,
+                });
+            }
+
+            let t2 = (-b + (b.powi(2) - a * c).sqrt()) / a;
+
+            if t2 < t_max && t2 > t_min {
+                let point = ray.point_at_parameter(t2);
+                return Some(HitRecord {
+                    t: t2,
+                    point,
+                    normal: (point - center) / radius,
+                    material,
+                });
+            }
+        }
+        None
+}
+
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f64,
@@ -52,38 +94,53 @@ impl Sphere {
 }
 
 impl Hitable for Sphere {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        let oc = r.origin - self.center;
-        let a = r.direction.dot(r.direction);
-        let b = oc.dot(r.direction);
-        let c = oc.dot(oc) - self.radius.powi(2);
-        let discriminant = b.powi(2) - a * c;
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        hit_sphere(
+            self.center,
+            self.radius,
+            &*self.material,
+            ray,
+            t_min,
+            t_max
+        )
+    }
+}
 
-        if discriminant > 0. {
-            let t1 = (-b - (b.powi(2) - a * c).sqrt()) / a;
+pub struct MovingSphere {
+    pub center0: Vec3,
+    pub center1: Vec3,
+    pub time0: f64,
+    pub time1: f64,
+    pub radius: f64,
+    pub material: Arc<Material>,
+}
 
-            if t1 < t_max && t1 > t_min {
-                let point = r.point_at_parameter(t1);
-                return Some(HitRecord {
-                    t: t1,
-                    point,
-                    normal: (point - self.center) / self.radius,
-                    material: &*self.material,
-                });
-            }
-
-            let t2 = (-b + (b.powi(2) - a * c).sqrt()) / a;
-
-            if t2 < t_max && t2 > t_min {
-                let point = r.point_at_parameter(t2);
-                return Some(HitRecord {
-                    t: t2,
-                    point,
-                    normal: (point - self.center) / self.radius,
-                    material: &*self.material,
-                });
-            }
+impl MovingSphere {
+    pub fn new(center0: Vec3, center1: Vec3, time0: f64, time1: f64, radius: f64, material: Arc<Material>) -> Self {
+        MovingSphere {
+            center0,
+            center1,
+            time0,
+            time1,
+            radius,
+            material,
         }
-        None
+    }
+
+    fn center(&self, time: f64) -> Vec3 {
+        self.center0 + ((time - self.time0) / (self.time1 - self.time0)) * (self.center1 - self.center0)
+    }
+}
+
+impl Hitable for MovingSphere {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        hit_sphere(
+            self.center(ray.time),
+            self.radius,
+            &*self.material,
+            ray,
+            t_min,
+            t_max
+        )
     }
 }

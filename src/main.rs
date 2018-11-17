@@ -14,7 +14,7 @@ use std::f64;
 
 use vec3::{Vec3};
 use ray::{Ray};
-use hitable::{Hitable, HitableList, Sphere};
+use hitable::{Hitable, HitableList, Sphere, MovingSphere};
 use material::{Lambertian, Metal, Dielectric};
 use camera::{Camera};
 
@@ -118,9 +118,14 @@ fn create_world() -> HitableList {
 
     for _ in 0..50 {
         let (color, x, z) = random_color_and_position();
+        let center = Vec3::new(x, -0.3, z);
+        let center_delta_y = rand::thread_rng().gen::<f64>() / 2.;
         world.push(Box::new(
-            Sphere::new(
-                Vec3::new(x, -0.3, z),
+            MovingSphere::new(
+                center,
+                center + Vec3::new(0., center_delta_y, 0.),
+                0.,
+                1.,
                 0.2,
                 Arc::new(
                     Lambertian::new(color)
@@ -160,9 +165,9 @@ fn create_world() -> HitableList {
 }
 
 fn main() -> io::Result<()> {
-    let nx = 600;
-    let ny = 400;
-    let ns = 150;
+    let nx = 200;
+    let ny = 100;
+    let ns = 100;
 
     println!("P3\n{} {}\n255", nx, ny);
 
@@ -174,7 +179,9 @@ fn main() -> io::Result<()> {
         Vec3::new(0., 1., 0.),
         35.,
         (nx as f64) / (ny as f64),
-        0.05
+        0.05,
+        0.,
+        1.
     );
 
     for j in (0..ny).rev() {

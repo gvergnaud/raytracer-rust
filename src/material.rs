@@ -40,7 +40,7 @@ pub struct MaterialRecord {
 }
 
 pub trait Material {
-    fn scatter(&self, r: &Ray, rec: &HitRecord) -> Option<MaterialRecord>;
+    fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<MaterialRecord>;
 }
 
 pub struct Lambertian {
@@ -56,18 +56,18 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, _r: &Ray, rec: &HitRecord) -> Option<MaterialRecord> {
+    fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<MaterialRecord> {
         Some(MaterialRecord {
             scattered: Ray {
                 origin: rec.point,
                 direction: rec.normal + random_point_in_unit_sphere(),
+                time: ray.time,
             },
             attenuation: self.albedo,
         })
 
     }
 }
-
 
 pub struct Metal {
     pub albedo: Vec3,
@@ -84,12 +84,13 @@ impl Metal {
 }
 
 impl Material for Metal {
-    fn scatter(&self, r: &Ray, rec: &HitRecord) -> Option<MaterialRecord> {
-        let reflected = reflect(r.direction.unit_vector(), rec.normal);
+    fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<MaterialRecord> {
+        let reflected = reflect(ray.direction.unit_vector(), rec.normal);
 
         let scattered = Ray {
             origin: rec.point,
-            direction: reflected + self.fuzz * random_point_in_unit_sphere()
+            direction: reflected + self.fuzz * random_point_in_unit_sphere(),
+            time: ray.time,
         };
 
         if scattered.direction.dot(rec.normal) > 0. {
@@ -140,6 +141,7 @@ impl Material for Dielectric {
                     scattered: Ray {
                         origin: rec.point,
                         direction: refracted,
+                        time: ray.time,
                     },
                     attenuation: Vec3::fromf(1.),
                 }
@@ -149,6 +151,7 @@ impl Material for Dielectric {
                     scattered: Ray {
                         origin: rec.point,
                         direction: reflect(ray.direction, rec.normal),
+                        time: ray.time,
                     },
                     attenuation: Vec3::fromf(1.),
                 }

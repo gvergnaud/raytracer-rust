@@ -22,6 +22,8 @@ pub struct Camera {
     lens_radius: f64,
     u: Vec3,
     v: Vec3,
+    time0: f64,
+    time1: f64,
 }
 
 impl Camera {
@@ -32,6 +34,8 @@ impl Camera {
         vertical_fov: f64,
         ratio: f64,
         aperture: f64,
+        time0: f64,
+        time1: f64,
     ) -> Self {
         let distance_to_focus = (look_at - look_from).length();
         let lens_radius = aperture / 2.;
@@ -59,12 +63,14 @@ impl Camera {
             horizontal,
             vertical,
             lower_left_corner,
+            time0,
+            time1,
         }
     }
 
     pub fn get_ray(&self, u: f64, v: f64) -> Ray {
         let rand_origin = self.lens_radius * random_point_in_unit_disk();
-        let offset = rand_origin.x * self.u + rand_origin * self.v;
+        let offset = rand_origin.x * self.u + rand_origin.y * self.v;
 
         let ray_origin = self.origin + offset;
 
@@ -73,9 +79,13 @@ impl Camera {
             + self.horizontal * u
             + self.vertical * v;
 
+        let mut rng = rand::thread_rng();
+        let random_time = self.time0 + rng.gen::<f64>() * (self.time1 - self.time0);
+
         Ray {
             origin: ray_origin,
-            direction: point_on_screen - ray_origin
+            direction: point_on_screen - ray_origin,
+            time: random_time
         }
     }
 }
