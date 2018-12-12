@@ -2,6 +2,7 @@ extern crate rand;
 
 mod vec3;
 mod ray;
+mod aabb;
 mod hitable;
 mod material;
 mod camera;

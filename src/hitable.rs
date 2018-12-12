@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use vec3::{Vec3};
 use ray::{Ray};
+use aabb::{Aabb};
 use material::{Material};
 
 pub struct HitRecord<'a> {
@@ -12,6 +13,8 @@ pub struct HitRecord<'a> {
 
 pub trait Hitable {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
+    fn bounding_box(&self, t0: f64, t1: f64) ->
+        Option<Aabb>;
 }
 
 pub type HitableList = Vec<Box<Hitable>>;
@@ -33,6 +36,17 @@ impl Hitable for HitableList {
             }
         })
     }
+
+    fn bounding_box(&self, t0: f64, t1: f64) -> Option<Aabb> {
+        self.iter().fold(None, |acc, item| {
+            match (acc, item.bounding_box(t0, t1)) {
+                (None, None) => None,
+                (Some(box1), Some(box2)) => Some(box1.surrounding_box(&box2)),
+                (None, Some(bounding_box)) => Some(bounding_box),
+                (Some(bounding_box), None) => Some(bounding_box),
+            }
+        })
+    }
 }
 
 fn hit_sphere<'a>(
@@ -44,37 +58,37 @@ fn hit_sphere<'a>(
     t_max: f64,
 ) -> Option<HitRecord<'a>> {
     let oc = ray.origin - center;
-        let a = ray.direction.dot(ray.direction);
-        let b = oc.dot(ray.direction);
-        let c = oc.dot(oc) - radius.powi(2);
-        let discriminant = b.powi(2) - a * c;
+    let a = ray.direction.dot(ray.direction);
+    let b = oc.dot(ray.direction);
+    let c = oc.dot(oc) - radius.powi(2);
+    let discriminant = b.powi(2) - a * c;
 
-        if discriminant > 0. {
-            let t1 = (-b - (b.powi(2) - a * c).sqrt()) / a;
+    if discriminant > 0. {
+        let t1 = (-b - (b.powi(2) - a * c).sqrt()) / a;
 
-            if t1 < t_max && t1 > t_min {
-                let point = ray.point_at_parameter(t1);
-                return Some(HitRecord {
-                    t: t1,
-                    point,
-                    normal: (point - center) / radius,
-                    material,
-                });
-            }
-
-            let t2 = (-b + (b.powi(2) - a * c).sqrt()) / a;
-
-            if t2 < t_max && t2 > t_min {
-                let point = ray.point_at_parameter(t2);
-                return Some(HitRecord {
-                    t: t2,
-                    point,
-                    normal: (point - center) / radius,
-                    material,
-                });
-            }
+        if t1 < t_max && t1 > t_min {
+            let point = ray.point_at_parameter(t1);
+            return Some(HitRecord {
+                t: t1,
+                point,
+                normal: (point - center) / radius,
+                material,
+            });
         }
-        None
+
+        let t2 = (-b + (b.powi(2) - a * c).sqrt()) / a;
+
+        if t2 < t_max && t2 > t_min {
+            let point = ray.point_at_parameter(t2);
+            return Some(HitRecord {
+                t: t2,
+                point,
+                normal: (point - center) / radius,
+                material,
+            });
+        }
+    }
+    None
 }
 
 pub struct Sphere {
@@ -102,6 +116,15 @@ impl Hitable for Sphere {
             ray,
             t_min,
             t_max
+        )
+    }
+
+    fn bounding_box(&self, t0: f64, t1: f64) -> Option<Aabb> {
+        Some(
+            Aabb {
+                min: self.center - Vec3::fromf(self.radius),
+                max: self.center + Vec3::fromf(self.radius),
+            }
         )
     }
 }
@@ -142,5 +165,19 @@ impl Hitable for MovingSphere {
             t_min,
             t_max
         )
+    }
+
+    fn bounding_box(&self, t0: f64, t1: f64) -> Option<Aabb> {
+        let box0 = Aabb {
+            min: self.center(t0) - Vec3::fromf(self.radius),
+            max: self.center(t0) + Vec3::fromf(self.radius),
+        };
+        
+        let box1 = Aabb {
+            min: self.center(t1) - Vec3::fromf(self.radius),
+            max: self.center(t1) + Vec3::fromf(self.radius),
+        };
+
+        Some(box0.surrounding_box(&box1))
     }
 }

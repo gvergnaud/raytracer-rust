@@ -1,5 +1,5 @@
 use std::cmp;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Add, Div, Mul, Neg, Sub, Index};
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Vec3 {
@@ -240,5 +240,18 @@ impl Neg for Vec3 {
 impl cmp::PartialEq for Vec3 {
     fn eq(&self, v: &Vec3) -> bool {
         self.x == v.x && self.y == v.y && self.z == v.z
+    }
+}
+
+impl Index<usize> for Vec3 {
+    type Output = f64;
+
+    fn index(&self, index: usize) -> &f64 {
+        match index {
+            0 => &self.x,
+            1 => &self.y,
+            2 => &self.z,
+            _ => panic!("You can't access an index greater than 2 on a Vec3.")
+        }
     }
 }
