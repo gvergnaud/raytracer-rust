@@ -6,10 +6,11 @@ mod aabb;
 mod hitable;
 mod material;
 mod camera;
+mod bvh_node;
 
 use rand::Rng;
 
-use std::io::{self};
+use std::io;
 use std::sync::Arc;
 use std::f64;
 

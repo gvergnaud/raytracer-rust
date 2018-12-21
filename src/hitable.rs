@@ -91,6 +91,7 @@ fn hit_sphere<'a>(
     None
 }
 
+#[derive(Clone)]
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f64,
@@ -129,6 +130,7 @@ impl Hitable for Sphere {
     }
 }
 
+#[derive(Clone)]
 pub struct MovingSphere {
     pub center0: Vec3,
     pub center1: Vec3,

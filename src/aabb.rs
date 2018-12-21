@@ -42,6 +42,15 @@ impl Aabb {
   }
 }
 
+pub fn optional_surrounding_box(maybe_aabb0: Option<Aabb>,maybe_aabb1: Option<Aabb>) -> Option<Aabb> {
+  match (maybe_aabb0, maybe_aabb1) {
+    (Some(aabb0), Some(aabb1)) => Some(aabb0.surrounding_box(&aabb1)),
+    (Some(aabb), None) => Some(aabb),
+    (None, Some(aabb)) => Some(aabb),
+    (None, None) => None,
+  }
+}
+
 fn ffmax(a: f64, b: f64) -> f64 {
   if a > b { a } else { b }
 }
