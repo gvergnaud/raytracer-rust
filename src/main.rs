@@ -19,6 +19,7 @@ use ray::{Ray};
 use hitable::{Hitable, HitableList, Sphere, MovingSphere};
 use material::{Lambertian, Metal, Dielectric};
 use camera::{Camera};
+use bvh_node::{BvhTree};
 
 fn background(r: &Ray) -> Vec3 {
     let unit_direction = r.direction.unit_vector();
@@ -26,14 +27,14 @@ fn background(r: &Ray) -> Vec3 {
     Vec3::new(1., 1., 1.) * (1. - t) + Vec3::new(0.5, 0.7, 1.) * t
 }
 
-fn color(r: &Ray, world: &HitableList, depth: u64) -> Vec3 {
+fn color(r: &Ray, tree: &BvhTree, depth: u64) -> Vec3 {
     let t_min = 0.01;
     let t_max = f64::MAX;
-    match world.hit(r, t_min, t_max) {
+    match tree.hit(r, t_min, t_max) {
         Some(rec) => {
             match (depth < 50, (*rec.material).scatter(&r, &rec)) {
                 (true, Some(mat_rec)) => {
-                    mat_rec.attenuation * color(&mat_rec.scattered, &world, depth + 1)
+                    mat_rec.attenuation * color(&mat_rec.scattered, tree, depth + 1)
                 },
                 _ => Vec3::fromf(0.),
             }
@@ -167,13 +168,17 @@ fn create_world() -> HitableList {
 }
 
 fn main() -> io::Result<()> {
-    let nx = 200;
-    let ny = 100;
-    let ns = 100;
+    let nx = 100;
+    let ny = 50;
+    let ns = 50;
 
     println!("P3\n{} {}\n255", nx, ny);
 
-    let world = create_world();
+    let mut world = create_world();
+
+    let t_min = 0.01;
+    let t_max = f64::MAX;
+    let tree = BvhTree::new(&mut world, t_min, t_max);
 
     let camera = Camera::new(
         Vec3::new(2.5, 0.5, 0.5),
@@ -197,7 +202,7 @@ fn main() -> io::Result<()> {
 
                 let r = camera.get_ray(u, v);
 
-                col = col + color(&r, &world, 0);
+                col = col + color(&r, &tree, 0);
             }
 
             let rgb = (col / (ns as f64)).sqrt() * 255.99;

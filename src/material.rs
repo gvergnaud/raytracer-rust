@@ -34,6 +34,7 @@ fn refract(vec: Vec3, normal: Vec3, refraction_indices_ratio: f64) -> Option<Vec
     }
 }
 
+#[derive(Copy, Clone)]
 pub struct MaterialRecord {
     pub scattered: Ray,
     pub attenuation: Vec3,
@@ -43,6 +44,7 @@ pub trait Material {
     fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<MaterialRecord>;
 }
 
+#[derive(Copy, Clone)]
 pub struct Lambertian {
     pub albedo: Vec3
 }
@@ -69,6 +71,7 @@ impl Material for Lambertian {
     }
 }
 
+#[derive(Copy, Clone)]
 pub struct Metal {
     pub albedo: Vec3,
     pub fuzz: f64,
@@ -104,6 +107,7 @@ impl Material for Metal {
     }
 }
 
+#[derive(Copy, Clone)]
 pub struct Dielectric {
     refraction_index: f64,
 }

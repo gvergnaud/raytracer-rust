@@ -8,7 +8,7 @@ pub struct HitRecord<'a> {
     pub t: f64,
     pub point: Vec3,
     pub normal: Vec3,
-    pub material: &'a Material,
+    pub material: &'a dyn Material,
 }
 
 pub trait Hitable {
@@ -17,7 +17,7 @@ pub trait Hitable {
         Option<Aabb>;
 }
 
-pub type HitableList = Vec<Box<Hitable>>;
+pub type HitableList = Vec<Box<dyn Hitable>>;
 
 impl Hitable for HitableList {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
@@ -52,7 +52,7 @@ impl Hitable for HitableList {
 fn hit_sphere<'a>(
     center: Vec3,
     radius: f64,
-    material: &'a Material,
+    material: &'a dyn Material,
     ray: &Ray,
     t_min: f64,
     t_max: f64,
@@ -95,11 +95,11 @@ fn hit_sphere<'a>(
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f64,
-    pub material: Arc<Material>,
+    pub material: Arc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: Vec3, radius: f64, material: Arc<Material>) -> Self {
+    pub fn new(center: Vec3, radius: f64, material: Arc<dyn Material>) -> Self {
         Sphere {
             center,
             radius,
@@ -120,7 +120,7 @@ impl Hitable for Sphere {
         )
     }
 
-    fn bounding_box(&self, t0: f64, t1: f64) -> Option<Aabb> {
+    fn bounding_box(&self, _t0: f64, _t1: f64) -> Option<Aabb> {
         Some(
             Aabb {
                 min: self.center - Vec3::fromf(self.radius),
@@ -137,11 +137,11 @@ pub struct MovingSphere {
     pub time0: f64,
     pub time1: f64,
     pub radius: f64,
-    pub material: Arc<Material>,
+    pub material: Arc<dyn Material>,
 }
 
 impl MovingSphere {
-    pub fn new(center0: Vec3, center1: Vec3, time0: f64, time1: f64, radius: f64, material: Arc<Material>) -> Self {
+    pub fn new(center0: Vec3, center1: Vec3, time0: f64, time1: f64, radius: f64, material: Arc<dyn Material>) -> Self {
         MovingSphere {
             center0,
             center1,

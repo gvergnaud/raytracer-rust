@@ -2,6 +2,7 @@ use vec3::Vec3;
 use ray::Ray;
 
 // for axis aligned bounding box
+#[derive(Debug, Copy, Clone)]
 pub struct Aabb {
   pub min: Vec3,
   pub max: Vec3,
@@ -27,17 +28,21 @@ impl Aabb {
   }
 
   pub fn surrounding_box(&self, aabb: &Aabb) -> Aabb {
-    Aabb {
-      min: Vec3 {
-        x: self.min.x.min(aabb.min.x),
-        y: self.min.y.min(aabb.min.y),
-        z: self.min.z.min(aabb.min.z),
-      },
-      max: Vec3 {
-        x: self.max.x.max(aabb.max.x),
-        y: self.max.y.max(aabb.max.y),
-        z: self.max.z.max(aabb.max.z),
-      }
+    surrounding_box(self, aabb)
+  }
+}
+
+pub fn surrounding_box(aabb1: &Aabb, aabb2: &Aabb) -> Aabb {
+  Aabb {
+    min: Vec3 {
+      x: aabb1.min.x.min(aabb2.min.x),
+      y: aabb1.min.y.min(aabb2.min.y),
+      z: aabb1.min.z.min(aabb2.min.z),
+    },
+    max: Vec3 {
+      x: aabb1.max.x.max(aabb2.max.x),
+      y: aabb1.max.y.max(aabb2.max.y),
+      z: aabb1.max.z.max(aabb2.max.z),
     }
   }
 }
