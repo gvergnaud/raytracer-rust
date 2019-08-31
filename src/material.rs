@@ -3,6 +3,7 @@ use self::rand::Rng;
 use ray::{Ray};
 use hitable::{HitRecord};
 use vec3::{Vec3};
+use texture::{ConstantTexture};
 
 fn random_point_in_unit_sphere() -> Vec3 {
     let mut point: Vec3;
@@ -45,12 +46,12 @@ pub trait Material {
 }
 
 #[derive(Copy, Clone)]
-pub struct Lambertian {
-    pub albedo: Vec3
+pub struct Lambertian<'a> {
+    pub albedo: &'a ConstantTexture
 }
 
-impl Lambertian {
-    pub fn new(albedo: Vec3) -> Self {
+impl<'a> Lambertian<'a> {
+    pub fn new(albedo: &'a ConstantTexture) -> Self {
         Lambertian {
             albedo,
         }

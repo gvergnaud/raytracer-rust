@@ -7,6 +7,7 @@ mod hitable;
 mod material;
 mod camera;
 mod bvh_node;
+mod texture;
 
 use rand::Rng;
 
