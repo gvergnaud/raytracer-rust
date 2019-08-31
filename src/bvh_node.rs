@@ -97,16 +97,14 @@ impl<'a> BvhTree<'a> {
   }
 
   fn new_leaf (&mut self, hitable: &'a Box<dyn Hitable>, time0: f64, time1: f64) -> NodeId {
-    let index = self.nodes.len();
-    
-    self.nodes.push(BvhNode {
+    let node = BvhNode {
       left: None,
       right: None,
       aabb: hitable.bounding_box(time0, time1),
       hitable: Some(hitable),
-    });
+    };
 
-    NodeId { index }
+    self.new_node(node)
   }
 
   fn new_node(&mut self, node: BvhNode<'a>) -> NodeId {
@@ -116,6 +114,43 @@ impl<'a> BvhTree<'a> {
 
     NodeId { index }
   }
+
+  fn hit_node(&self, node_id: NodeId, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    let node = self.nodes[node_id.index];
+    if let Some(aabb) = node.aabb {
+      if aabb.hit(r, t_min, t_max) {
+        match (node.left, node.right) {
+          (Some(left), Some(right)) => {
+            match (
+              self.hit_node(left, r, t_min, t_max),
+              self.hit_node(right, r, t_min, t_max)
+            ) {
+              (Some(left_rec), Some(right_rec)) => 
+                if left_rec.t < right_rec.t {
+                  Some(left_rec)
+                } else {
+                  Some(right_rec)
+                },
+              (Some(left_rec), None) => Some(left_rec),
+              (None, Some(right_rec)) => Some(right_rec),
+              (None, None) => None,
+            }
+          },
+          (Some(left), None) => {
+            self.hit_node(left, r, t_min, t_max)
+          },
+          (None, Some(right)) => {
+            self.hit_node(right, r, t_min, t_max)
+          },
+          (None, None) => self.nodes[node_id.index].hit(r, t_min, t_max)
+        }
+      } else {
+        None
+      }
+    } else {
+      None
+    }
+  }
 }
 
 impl<'a> Hitable for BvhTree<'a> {
@@ -124,34 +159,7 @@ impl<'a> Hitable for BvhTree<'a> {
   }
   
   fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-    let root_node = self.nodes[self.root.index];
-    if let Some(aabb) = root_node.aabb {
-      if aabb.hit(r, t_min, t_max) {
-        if let (Some(left), Some(right)) = (root_node.left, root_node.right) {
-          match (
-            self.nodes[left.index].hit(r, t_min, t_max),
-            self.nodes[right.index].hit(r, t_min, t_max)
-          ) {
-            (Some(left_rec), Some(right_rec)) => {
-              if left_rec.t < right_rec.t {
-                Some(left_rec)
-              } else {
-                Some(right_rec)
-              }
-            },
-            (Some(left_rec), None) => Some(left_rec),
-            (None, Some(right_rec)) => Some(right_rec),
-            (None, None) => None,
-          }
-        } else {
-          None
-        }
-      } else {
-        None
-      }
-    } else {
-      None
-    }
+    self.hit_node(self.root, r, t_min, t_max)
   }
 }
 

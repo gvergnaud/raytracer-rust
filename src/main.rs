@@ -27,14 +27,14 @@ fn background(r: &Ray) -> Vec3 {
     Vec3::new(1., 1., 1.) * (1. - t) + Vec3::new(0.5, 0.7, 1.) * t
 }
 
-fn color(r: &Ray, tree: &BvhTree, depth: u64) -> Vec3 {
+fn color(r: &Ray, scene: &dyn Hitable, depth: u64) -> Vec3 {
     let t_min = 0.01;
     let t_max = f64::MAX;
-    match tree.hit(r, t_min, t_max) {
+    match scene.hit(r, t_min, t_max) {
         Some(rec) => {
             match (depth < 50, (*rec.material).scatter(&r, &rec)) {
                 (true, Some(mat_rec)) => {
-                    mat_rec.attenuation * color(&mat_rec.scattered, tree, depth + 1)
+                    mat_rec.attenuation * color(&mat_rec.scattered, scene, depth + 1)
                 },
                 _ => Vec3::fromf(0.),
             }
@@ -168,8 +168,8 @@ fn create_world() -> HitableList {
 }
 
 fn main() -> io::Result<()> {
-    let nx = 100;
-    let ny = 50;
+    let nx = 200;
+    let ny = 100;
     let ns = 50;
 
     println!("P3\n{} {}\n255", nx, ny);
