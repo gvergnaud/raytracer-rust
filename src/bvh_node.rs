@@ -132,12 +132,8 @@ impl<'a> BvhTree<'a> {
               (None, None) => None,
             }
           },
-          (Some(left), None) => {
-            self.hit_node(left, r, t_min, t_max)
-          },
-          (None, Some(right)) => {
-            self.hit_node(right, r, t_min, t_max)
-          },
+          (Some(left), None) => self.hit_node(left, r, t_min, t_max),
+          (None, Some(right)) => self.hit_node(right, r, t_min, t_max),
           (None, None) => node.hit(r, t_min, t_max)
         }
       } else {
