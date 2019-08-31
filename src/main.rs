@@ -21,6 +21,7 @@ use hitable::{Hitable, HitableList, Sphere, MovingSphere};
 use material::{Lambertian, Metal, Dielectric};
 use camera::{Camera};
 use bvh_node::{BvhTree};
+use texture::{ConstantTexture, CheckedTexture};
 
 fn background(r: &Ray) -> Vec3 {
     let unit_direction = r.direction.unit_vector();
@@ -83,7 +84,7 @@ fn create_world() -> HitableList {
         }
 
         (
-            colors[rng.gen_range::<u64>(0, colors.len() as u64) as usize],
+            &colors[rng.gen_range::<u64>(0, colors.len() as u64) as usize],
             x,
             z,
         )
@@ -94,14 +95,21 @@ fn create_world() -> HitableList {
             Vec3::new(0., -100.5 , -1.),
             100.0,
             Arc::new(
-                Lambertian::new(Vec3::new(0.8, 0.8, 0.8))
+                Lambertian::new(
+                    Box::new(
+                        CheckedTexture::new(
+                            Box::new(ConstantTexture::new(Vec3::new(0.8, 0.8, 0.8))),
+                            Box::new(ConstantTexture::new(Vec3::new(0.2, 0.2, 0.2)))
+                        )
+                    )
+                )
             ),
         )),
         Box::new(Sphere::new(
             Vec3::new(0., 0., -1.),
             0.5,
             Arc::new(
-                Lambertian::new(Vec3::new(139., 75., 98.) / 255.)
+                Lambertian::new(Box::new(ConstantTexture::new(Vec3::new(139., 75., 98.) / 255.)))
             ),
         )),
         Box::new(Sphere::new(
@@ -132,7 +140,7 @@ fn create_world() -> HitableList {
                 1.,
                 0.2,
                 Arc::new(
-                    Lambertian::new(color)
+                    Lambertian::new(Box::new(ConstantTexture::new(color.clone())))
                 )
             )
         ));
@@ -146,7 +154,7 @@ fn create_world() -> HitableList {
                 Vec3::new(x, -0.3, z),
                 0.2,
                 Arc::new(
-                    Metal::new(color, fuzz)
+                    Metal::new(color.clone(), fuzz)
                 )
             )
         ));
@@ -169,9 +177,9 @@ fn create_world() -> HitableList {
 }
 
 fn main() -> io::Result<()> {
-    let nx = 200;
-    let ny = 100;
-    let ns = 50;
+    let nx = 600;
+    let ny = 400;
+    let ns = 100;
 
     println!("P3\n{} {}\n255", nx, ny);
 

@@ -6,8 +6,7 @@ use ray::{Ray};
 use aabb::{Aabb, self};
 use hitable::{Hitable, HitRecord};
 
-#[derive(Debug, Copy, Clone)]
-pub struct NodeId {
+struct NodeId {
   index: usize
 }
 
@@ -16,7 +15,7 @@ pub struct BvhTree<'a> {
   root: NodeId
 }
 
-pub struct BvhNode<'a> {
+struct BvhNode<'a> {
   left: Option<NodeId>,
   right: Option<NodeId>,
   aabb: Option<Aabb>,
@@ -111,15 +110,15 @@ impl<'a> BvhTree<'a> {
     NodeId { index }
   }
 
-  fn hit_node(&self, node_id: NodeId, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+  fn hit_node(&self, node_id: &NodeId, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
     let node = &self.nodes[node_id.index];
     if let Some(aabb) = node.aabb {
       if aabb.hit(r, t_min, t_max) {
-        match (node.left, node.right) {
+        match (&node.left, &node.right) {
           (Some(left), Some(right)) => {
             match (
-              self.hit_node(left, r, t_min, t_max),
-              self.hit_node(right, r, t_min, t_max)
+              self.hit_node(&left, r, t_min, t_max),
+              self.hit_node(&right, r, t_min, t_max)
             ) {
               (Some(left_rec), Some(right_rec)) => 
                 if left_rec.t < right_rec.t {
@@ -132,8 +131,8 @@ impl<'a> BvhTree<'a> {
               (None, None) => None,
             }
           },
-          (Some(left), None) => self.hit_node(left, r, t_min, t_max),
-          (None, Some(right)) => self.hit_node(right, r, t_min, t_max),
+          (Some(left), None) => self.hit_node(&left, r, t_min, t_max),
+          (None, Some(right)) => self.hit_node(&right, r, t_min, t_max),
           (None, None) => node.hit(r, t_min, t_max)
         }
       } else {
@@ -151,7 +150,7 @@ impl<'a> Hitable for BvhTree<'a> {
   }
   
   fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-    self.hit_node(self.root, r, t_min, t_max)
+    self.hit_node(&self.root, r, t_min, t_max)
   }
 }
 

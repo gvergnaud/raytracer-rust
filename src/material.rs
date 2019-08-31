@@ -3,7 +3,7 @@ use self::rand::Rng;
 use ray::{Ray};
 use hitable::{HitRecord};
 use vec3::{Vec3};
-use texture::{ConstantTexture};
+use texture::{Texture};
 
 fn random_point_in_unit_sphere() -> Vec3 {
     let mut point: Vec3;
@@ -45,13 +45,12 @@ pub trait Material {
     fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<MaterialRecord>;
 }
 
-#[derive(Copy, Clone)]
-pub struct Lambertian<'a> {
-    pub albedo: &'a ConstantTexture
+pub struct Lambertian {
+    pub albedo: Box<dyn Texture>
 }
 
-impl<'a> Lambertian<'a> {
-    pub fn new(albedo: &'a ConstantTexture) -> Self {
+impl Lambertian {
+    pub fn new(albedo: Box<dyn Texture>) -> Self {
         Lambertian {
             albedo,
         }
@@ -66,7 +65,7 @@ impl Material for Lambertian {
                 direction: rec.normal + random_point_in_unit_sphere(),
                 time: ray.time,
             },
-            attenuation: self.albedo,
+            attenuation: self.albedo.value(0., 0., rec.point),
         })
 
     }
