@@ -16,7 +16,6 @@ pub struct BvhTree<'a> {
   root: NodeId
 }
 
-#[derive(Copy, Clone)]
 pub struct BvhNode<'a> {
   left: Option<NodeId>,
   right: Option<NodeId>,
@@ -103,20 +102,17 @@ impl<'a> BvhTree<'a> {
       aabb: hitable.bounding_box(time0, time1),
       hitable: Some(hitable),
     };
-
     self.new_node(node)
   }
 
   fn new_node(&mut self, node: BvhNode<'a>) -> NodeId {
     let index = self.nodes.len();
-    
     self.nodes.push(node);
-
     NodeId { index }
   }
 
   fn hit_node(&self, node_id: NodeId, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-    let node = self.nodes[node_id.index];
+    let node = &self.nodes[node_id.index];
     if let Some(aabb) = node.aabb {
       if aabb.hit(r, t_min, t_max) {
         match (node.left, node.right) {
@@ -142,7 +138,7 @@ impl<'a> BvhTree<'a> {
           (None, Some(right)) => {
             self.hit_node(right, r, t_min, t_max)
           },
-          (None, None) => self.nodes[node_id.index].hit(r, t_min, t_max)
+          (None, None) => node.hit(r, t_min, t_max)
         }
       } else {
         None
@@ -172,10 +168,6 @@ fn box_x_compare(a: &Box<dyn Hitable>, b: &Box<dyn Hitable>) -> Ordering {
         panic!("Can't compare");
       }
     },
-    // maybe here add cases for (Some, None) and (None, Some) ? 
-    // (Some(_), None) => Ordering::Greater,
-    // (None, Some(_)) => Ordering::Less,
-    // not  sur it makes sense
     _ => {
       panic!("Can't compare");
     }
