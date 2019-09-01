@@ -9,7 +9,7 @@ pub struct Aabb {
 }
 
 impl Aabb {
-  pub fn hit(&self, r: &Ray, mut tmin: f64, mut tmax: f64) -> bool {
+  pub fn hit(&self, r: &Ray, mut tmin: f32, mut tmax: f32) -> bool {
     for a in 0..3 {
       let min_t = (self.min[a] - r.origin[a]) / r.direction[a];
       let max_t = (self.max[a] - r.origin[a]) / r.direction[a];
@@ -56,10 +56,10 @@ pub fn optional_surrounding_box(maybe_aabb0: Option<Aabb>,maybe_aabb1: Option<Aa
   }
 }
 
-fn ffmax(a: f64, b: f64) -> f64 {
+fn ffmax(a: f32, b: f32) -> f32 {
   if a > b { a } else { b }
 }
 
-fn ffmin(a: f64, b: f64) -> f64 {
+fn ffmin(a: f32, b: f32) -> f32 {
   if a < b { a } else { b }
 }

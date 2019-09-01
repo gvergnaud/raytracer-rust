@@ -5,22 +5,22 @@ use aabb::{Aabb};
 use material::{Material};
 
 pub struct HitRecord<'a> {
-    pub t: f64,
+    pub t: f32,
     pub point: Vec3,
     pub normal: Vec3,
     pub material: &'a dyn Material,
 }
 
 pub trait Hitable {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
-    fn bounding_box(&self, t0: f64, t1: f64) ->
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord>;
+    fn bounding_box(&self, t0: f32, t1: f32) ->
         Option<Aabb>;
 }
 
 pub type HitableList = Vec<Box<dyn Hitable>>;
 
 impl Hitable for HitableList {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         self.iter().fold(None, |acc, item| {
             match (acc, item.hit(r, t_min, t_max)) {
                 (None, None) => None,
@@ -37,7 +37,7 @@ impl Hitable for HitableList {
         })
     }
 
-    fn bounding_box(&self, t0: f64, t1: f64) -> Option<Aabb> {
+    fn bounding_box(&self, t0: f32, t1: f32) -> Option<Aabb> {
         self.iter().fold(None, |acc, item| {
             match (acc, item.bounding_box(t0, t1)) {
                 (None, None) => None,
@@ -51,11 +51,11 @@ impl Hitable for HitableList {
 
 fn hit_sphere<'a>(
     center: Vec3,
-    radius: f64,
+    radius: f32,
     material: &'a dyn Material,
     ray: &Ray,
-    t_min: f64,
-    t_max: f64,
+    t_min: f32,
+    t_max: f32,
 ) -> Option<HitRecord<'a>> {
     let oc = ray.origin - center;
     let a = ray.direction.dot(ray.direction);
@@ -94,12 +94,12 @@ fn hit_sphere<'a>(
 #[derive(Clone)]
 pub struct Sphere {
     pub center: Vec3,
-    pub radius: f64,
+    pub radius: f32,
     pub material: Arc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: Vec3, radius: f64, material: Arc<dyn Material>) -> Self {
+    pub fn new(center: Vec3, radius: f32, material: Arc<dyn Material>) -> Self {
         Sphere {
             center,
             radius,
@@ -109,7 +109,7 @@ impl Sphere {
 }
 
 impl Hitable for Sphere {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         hit_sphere(
             self.center,
             self.radius,
@@ -120,7 +120,7 @@ impl Hitable for Sphere {
         )
     }
 
-    fn bounding_box(&self, _t0: f64, _t1: f64) -> Option<Aabb> {
+    fn bounding_box(&self, _t0: f32, _t1: f32) -> Option<Aabb> {
         Some(
             Aabb {
                 min: self.center - Vec3::fromf(self.radius),
@@ -134,14 +134,14 @@ impl Hitable for Sphere {
 pub struct MovingSphere {
     pub center0: Vec3,
     pub center1: Vec3,
-    pub time0: f64,
-    pub time1: f64,
-    pub radius: f64,
+    pub time0: f32,
+    pub time1: f32,
+    pub radius: f32,
     pub material: Arc<dyn Material>,
 }
 
 impl MovingSphere {
-    pub fn new(center0: Vec3, center1: Vec3, time0: f64, time1: f64, radius: f64, material: Arc<dyn Material>) -> Self {
+    pub fn new(center0: Vec3, center1: Vec3, time0: f32, time1: f32, radius: f32, material: Arc<dyn Material>) -> Self {
         MovingSphere {
             center0,
             center1,
@@ -152,13 +152,13 @@ impl MovingSphere {
         }
     }
 
-    fn center(&self, time: f64) -> Vec3 {
+    fn center(&self, time: f32) -> Vec3 {
         self.center0 + ((time - self.time0) / (self.time1 - self.time0)) * (self.center1 - self.center0)
     }
 }
 
 impl Hitable for MovingSphere {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         hit_sphere(
             self.center(ray.time),
             self.radius,
@@ -169,7 +169,7 @@ impl Hitable for MovingSphere {
         )
     }
 
-    fn bounding_box(&self, t0: f64, t1: f64) -> Option<Aabb> {
+    fn bounding_box(&self, t0: f32, t1: f32) -> Option<Aabb> {
         let box0 = Aabb {
             min: self.center(t0) - Vec3::fromf(self.radius),
             max: self.center(t0) + Vec3::fromf(self.radius),

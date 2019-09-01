@@ -13,7 +13,7 @@ use rand::Rng;
 
 use std::io;
 use std::sync::Arc;
-use std::f64;
+use std::f32;
 
 use vec3::{Vec3};
 use ray::{Ray};
@@ -31,7 +31,7 @@ fn background(r: &Ray) -> Vec3 {
 
 fn color(r: &Ray, scene: &dyn Hitable, depth: u64) -> Vec3 {
     let t_min = 0.01;
-    let t_max = f64::MAX;
+    let t_max = f32::MAX;
     match scene.hit(r, t_min, t_max) {
         Some(rec) => {
             match (depth < 50, (*rec.material).scatter(&r, &rec)) {
@@ -61,7 +61,7 @@ fn create_world() -> HitableList {
 
     let mut world : HitableList;
 
-    let intersects_with_main_spheres = |new_center: Vec3, new_radius: f64| {
+    let intersects_with_main_spheres = |new_center: Vec3, new_radius: f32| {
         [
             (Vec3::new(0., 0., -1.), 0.7),
             (Vec3::new(-1., 0., -1.), 0.7),
@@ -75,11 +75,11 @@ fn create_world() -> HitableList {
 
     let random_color_and_position = || {
         let mut rng = rand::thread_rng();
-        let mut x : f64;
-        let mut z : f64;
+        let mut x : f32;
+        let mut z : f32;
         loop {
-            x = rng.gen_range::<f64>(-5., 5.);
-            z = rng.gen_range::<f64>(-5., 5.);
+            x = rng.gen_range::<f32>(-5., 5.);
+            z = rng.gen_range::<f32>(-5., 5.);
             if !intersects_with_main_spheres(Vec3::new(x, -0.3, z), 0.2) { break; }
         }
 
@@ -131,7 +131,7 @@ fn create_world() -> HitableList {
     for _ in 0..50 {
         let (color, x, z) = random_color_and_position();
         let center = Vec3::new(x, -0.3, z);
-        let center_delta_y = rand::thread_rng().gen::<f64>() / 2.;
+        let center_delta_y = rand::thread_rng().gen::<f32>() / 2.;
         world.push(Box::new(
             MovingSphere::new(
                 center,
@@ -148,7 +148,7 @@ fn create_world() -> HitableList {
 
     for _ in 0..25 {
         let (color, x, z) = random_color_and_position();
-        let fuzz = rand::thread_rng().gen::<f64>();
+        let fuzz = rand::thread_rng().gen::<f32>();
         world.push(Box::new(
             Sphere::new(
                 Vec3::new(x, -0.3, z),
@@ -179,14 +179,14 @@ fn create_world() -> HitableList {
 fn main() -> io::Result<()> {
     let nx = 600;
     let ny = 400;
-    let ns = 100;
+    let ns = 50;
 
     println!("P3\n{} {}\n255", nx, ny);
 
     let mut world = create_world();
 
     let t_min = 0.01;
-    let t_max = f64::MAX;
+    let t_max = f32::MAX;
     let tree = BvhTree::new(&mut world, t_min, t_max);
 
     let camera = Camera::new(
@@ -194,7 +194,7 @@ fn main() -> io::Result<()> {
         Vec3::new(0., -0.2, -1.),
         Vec3::new(0., 1., 0.),
         35.,
-        (nx as f64) / (ny as f64),
+        (nx as f32) / (ny as f32),
         0.05,
         0.,
         1.
@@ -206,15 +206,15 @@ fn main() -> io::Result<()> {
 
             for _ in 0..ns {
                 let mut rng = rand::thread_rng();
-                let u = ((i as f64) + rng.gen::<f64>()) / (nx as f64);
-                let v = ((j as f64) + rng.gen::<f64>()) / (ny as f64);
+                let u = ((i as f32) + rng.gen::<f32>()) / (nx as f32);
+                let v = ((j as f32) + rng.gen::<f32>()) / (ny as f32);
 
                 let r = camera.get_ray(u, v);
 
                 col = col + color(&r, &tree, 0);
             }
 
-            let rgb = (col / (ns as f64)).sqrt() * 255.99;
+            let rgb = (col / (ns as f32)).sqrt() * 255.99;
 
             println!("{} {} {}", rgb.r() as u32, rgb.g() as u32, rgb.b() as u32);
         }

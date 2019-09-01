@@ -1,7 +1,7 @@
 use vec3::{Vec3};
 
 pub trait Texture {
-  fn value(&self, u: f64, v: f64, point: Vec3) -> Vec3;
+  fn value(&self, u: f32, v: f32, point: Vec3) -> Vec3;
 }
 
 pub struct ConstantTexture {
@@ -17,7 +17,7 @@ impl ConstantTexture {
 }
 
 impl Texture for ConstantTexture {
-  fn value(&self, _u: f64, _v: f64, _p: Vec3) -> Vec3 {
+  fn value(&self, _u: f32, _v: f32, _p: Vec3) -> Vec3 {
     self.color
   }
 }
@@ -38,7 +38,7 @@ impl CheckedTexture {
 }
 
 impl Texture for CheckedTexture {
-  fn value(&self, u: f64, v: f64, point: Vec3) -> Vec3 {
+  fn value(&self, u: f32, v: f32, point: Vec3) -> Vec3 {
     let sines = (10. * point.x).sin() * (10. * point.y).sin() + (10. * point.z).sin();
     if sines < 0. {
       self.odd.value(u, v, point)

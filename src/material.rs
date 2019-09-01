@@ -20,7 +20,7 @@ fn reflect(vec: Vec3, normal: Vec3) -> Vec3 {
     vec - 2. * vec.dot(normal) * normal
 }
 
-fn refract(vec: Vec3, normal: Vec3, refraction_indices_ratio: f64) -> Option<Vec3> {
+fn refract(vec: Vec3, normal: Vec3, refraction_indices_ratio: f32) -> Option<Vec3> {
     let uv = vec.unit_vector();
     let dt = uv.dot(normal);
     let discriminant =
@@ -74,11 +74,11 @@ impl Material for Lambertian {
 #[derive(Copy, Clone)]
 pub struct Metal {
     pub albedo: Vec3,
-    pub fuzz: f64,
+    pub fuzz: f32,
 }
 
 impl Metal {
-    pub fn new(albedo: Vec3, fuzz: f64) -> Self {
+    pub fn new(albedo: Vec3, fuzz: f32) -> Self {
         Metal {
             albedo,
             fuzz,
@@ -109,11 +109,11 @@ impl Material for Metal {
 
 #[derive(Copy, Clone)]
 pub struct Dielectric {
-    refraction_index: f64,
+    refraction_index: f32,
 }
 
 impl Dielectric {
-    pub fn new(refraction_index: f64) -> Self {
+    pub fn new(refraction_index: f32) -> Self {
         Dielectric {
             refraction_index,
         }

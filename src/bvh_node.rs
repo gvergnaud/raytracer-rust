@@ -23,11 +23,11 @@ struct BvhNode<'a> {
 }
 
 impl<'a> Hitable for BvhNode<'a> {
-  fn bounding_box(&self, _t0: f64, _t1: f64) -> Option<Aabb> {
+  fn bounding_box(&self, _t0: f32, _t1: f32) -> Option<Aabb> {
     self.aabb
   }
 
-  fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+  fn hit(&self, r: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
     match self.hitable {
       Some(hitable) => hitable.hit(r, t_min, t_max),
       None => None
@@ -36,7 +36,7 @@ impl<'a> Hitable for BvhNode<'a> {
 }
 
 impl<'a> BvhTree<'a> {
-  pub fn new(list: &'a mut[Box<dyn Hitable>], time0: f64, time1: f64) -> BvhTree {
+  pub fn new(list: &'a mut[Box<dyn Hitable>], time0: f32, time1: f32) -> BvhTree {
     let mut tree = BvhTree {
       nodes: Vec::new(),
       root: NodeId { index: 0 }
@@ -45,7 +45,7 @@ impl<'a> BvhTree<'a> {
     tree
   }
 
-  fn build(&mut self, list: &'a mut[Box<dyn Hitable>], time0: f64, time1: f64) -> NodeId {
+  fn build(&mut self, list: &'a mut[Box<dyn Hitable>], time0: f32, time1: f32) -> NodeId {
     let axis = rand::thread_rng().gen_range::<i32>(0, 3);
     
     match axis {
@@ -94,7 +94,7 @@ impl<'a> BvhTree<'a> {
     }
   }
 
-  fn new_leaf (&mut self, hitable: &'a Box<dyn Hitable>, time0: f64, time1: f64) -> NodeId {
+  fn new_leaf (&mut self, hitable: &'a Box<dyn Hitable>, time0: f32, time1: f32) -> NodeId {
     let node = BvhNode {
       left: None,
       right: None,
@@ -110,7 +110,7 @@ impl<'a> BvhTree<'a> {
     NodeId { index }
   }
 
-  fn hit_node(&self, node_id: &NodeId, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+  fn hit_node(&self, node_id: &NodeId, r: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
     let node = &self.nodes[node_id.index];
     if let Some(aabb) = node.aabb {
       if aabb.hit(r, t_min, t_max) {
@@ -145,11 +145,11 @@ impl<'a> BvhTree<'a> {
 }
 
 impl<'a> Hitable for BvhTree<'a> {
-  fn bounding_box(&self, t0: f64, t1: f64) -> Option<Aabb> {
+  fn bounding_box(&self, t0: f32, t1: f32) -> Option<Aabb> {
     self.nodes[self.root.index].bounding_box(t0, t1)
   }
   
-  fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+  fn hit(&self, r: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
     self.hit_node(&self.root, r, t_min, t_max)
   }
 }

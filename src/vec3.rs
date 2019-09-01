@@ -3,13 +3,13 @@ use std::ops::{Add, Div, Mul, Neg, Sub, Index};
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Vec3 {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64,
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
 }
 
 impl Vec3 {
-    pub fn new(x: f64, y: f64, z: f64) -> Vec3 {
+    pub fn new(x: f32, y: f32, z: f32) -> Vec3 {
         Vec3 {
             x,
             y,
@@ -17,7 +17,7 @@ impl Vec3 {
         }
     }
 
-    pub fn fromf(v: f64) -> Vec3 {
+    pub fn fromf(v: f32) -> Vec3 {
         Vec3 {
             x: v,
             y: v,
@@ -33,27 +33,27 @@ impl Vec3 {
         Vec3 { x: 1., y: 1., z: 1. }
     }
 
-    pub fn r(self) -> f64 {
+    pub fn r(self) -> f32 {
         self.x
     }
 
-    pub fn g(self) -> f64 {
+    pub fn g(self) -> f32 {
         self.y
     }
 
-    pub fn b(self) -> f64 {
+    pub fn b(self) -> f32 {
         self.z
     }
 
-    pub fn length(self) -> f64 {
+    pub fn length(self) -> f32 {
         (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
     }
 
-    pub fn squared_length(self) -> f64 {
+    pub fn squared_length(self) -> f32 {
         self.x.powi(2) + self.y.powi(2) + self.z.powi(2)
     }
 
-    pub fn dot(self, b: Vec3) -> f64 {
+    pub fn dot(self, b: Vec3) -> f32 {
         self.x * b.x + self.y * b.y + self.z * b.z
     }
 
@@ -86,7 +86,7 @@ impl Add for Vec3 {
     }
 }
 
-impl Add<Vec3> for f64 {
+impl Add<Vec3> for f32 {
     type Output = Vec3;
     fn add(self, other: Vec3) -> Vec3 {
         Vec3 {
@@ -97,9 +97,9 @@ impl Add<Vec3> for f64 {
     }
 }
 
-impl Add<f64> for Vec3 {
+impl Add<f32> for Vec3 {
     type Output = Vec3;
-    fn add(self, other: f64) -> Vec3 {
+    fn add(self, other: f32) -> Vec3 {
         Vec3 {
             x: self.x + other,
             y: self.y + other,
@@ -120,10 +120,10 @@ impl Add<f64> for Vec3 {
     }
 }
 
-impl Sub<f64> for Vec3 {
+impl Sub<f32> for Vec3 {
     type Output = Self;
 
-    fn sub(self, other: f64) -> Self {
+    fn sub(self, other: f32) -> Self {
         Vec3 {
             x: self.x - other,
             y: self.y - other,
@@ -132,7 +132,7 @@ impl Sub<f64> for Vec3 {
     }
 }
 
-impl Sub<Vec3> for f64 {
+impl Sub<Vec3> for f32 {
     type Output = Vec3;
     fn sub(self, other: Vec3) -> Vec3 {
         Vec3 {
@@ -167,10 +167,10 @@ impl Div for Vec3 {
     }
 }
 
-impl Div<f64> for Vec3 {
+impl Div<f32> for Vec3 {
     type Output = Self;
 
-    fn div(self, other: f64) -> Self {
+    fn div(self, other: f32) -> Self {
         Vec3 {
             x: self.x / other,
             y: self.y / other,
@@ -179,7 +179,7 @@ impl Div<f64> for Vec3 {
     }
 }
 
-impl Div<Vec3> for f64 {
+impl Div<Vec3> for f32 {
     type Output = Vec3;
     fn div(self, other: Vec3) -> Vec3 {
         Vec3 {
@@ -202,10 +202,10 @@ impl Mul for Vec3 {
     }
 }
 
-impl Mul<f64> for Vec3 {
+impl Mul<f32> for Vec3 {
     type Output = Self;
 
-    fn mul(self, other: f64) -> Self {
+    fn mul(self, other: f32) -> Self {
         Vec3 {
             x: self.x * other,
             y: self.y * other,
@@ -214,7 +214,7 @@ impl Mul<f64> for Vec3 {
     }
 }
 
-impl Mul<Vec3> for f64 {
+impl Mul<Vec3> for f32 {
     type Output = Vec3;
     fn mul(self, other: Vec3) -> Vec3 {
         Vec3 {
@@ -244,9 +244,9 @@ impl cmp::PartialEq for Vec3 {
 }
 
 impl Index<usize> for Vec3 {
-    type Output = f64;
+    type Output = f32;
 
-    fn index(&self, index: usize) -> &f64 {
+    fn index(&self, index: usize) -> &f32 {
         match index {
             0 => &self.x,
             1 => &self.y,
