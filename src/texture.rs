@@ -1,4 +1,5 @@
 use vec3::{Vec3};
+use noises::{Perlin};
 
 pub trait Texture {
   fn value(&self, u: f32, v: f32, point: Vec3) -> Vec3;
@@ -45,5 +46,23 @@ impl Texture for CheckedTexture {
     } else {
       self.even.value(u, v, point)
     }
+  }
+}
+
+pub struct NoiseTexture {
+  noise: Perlin
+}
+
+impl NoiseTexture {
+  pub fn new() -> Self {
+    NoiseTexture {
+      noise: Perlin::new()
+    }
+  }
+}
+
+impl Texture for NoiseTexture {
+  fn value(&self, _u: f32, _v: f32, point: Vec3) -> Vec3 {
+    return Vec3::fromf(1.) * self.noise.noise(point);
   }
 }

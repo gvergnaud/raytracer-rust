@@ -8,6 +8,7 @@ mod material;
 mod camera;
 mod bvh_node;
 mod texture;
+mod noises;
 
 use rand::Rng;
 
@@ -21,7 +22,7 @@ use hitable::{Hitable, HitableList, Sphere, MovingSphere};
 use material::{Lambertian, Metal, Dielectric};
 use camera::{Camera};
 use bvh_node::{BvhTree};
-use texture::{ConstantTexture, CheckedTexture};
+use texture::{ConstantTexture, CheckedTexture, NoiseTexture};
 
 fn background(r: &Ray) -> Vec3 {
     let unit_direction = r.direction.unit_vector();
@@ -176,28 +177,49 @@ fn create_world() -> HitableList {
     world
 }
 
+fn two_spheres() -> HitableList {
+    let world: HitableList = vec![
+        Box::new(
+            Sphere::new(
+                Vec3::new(0., -1000., 0.),
+                1000.,
+                Arc::new(Lambertian::new(Box::new(NoiseTexture::new())))
+            )
+        ),
+        Box::new(
+           Sphere::new(
+                Vec3::new(0., 2., 0.),
+                2.,
+                Arc::new(Lambertian::new(Box::new(NoiseTexture::new())))
+            )
+        )
+    ];
+    world
+}
+
 fn main() -> io::Result<()> {
-    let nx = 600;
-    let ny = 400;
+    let nx = 200;
+    let ny = 120;
     let ns = 50;
 
     println!("P3\n{} {}\n255", nx, ny);
 
-    let mut world = create_world();
+    // let mut world = create_world();
+    let mut world = two_spheres();
 
     let t_min = 0.01;
     let t_max = f32::MAX;
     let tree = BvhTree::new(&mut world, t_min, t_max);
 
     let camera = Camera::new(
-        Vec3::new(2.5, 0.5, 0.5),
-        Vec3::new(0., -0.2, -1.),
+        Vec3::new(13., 2., 3.),
+        Vec3::fromf(0.),
         Vec3::new(0., 1., 0.),
-        35.,
+        20.,
         (nx as f32) / (ny as f32),
-        0.05,
-        0.,
-        1.
+        0.0,
+        1.,
+        1.5
     );
 
     for j in (0..ny).rev() {
