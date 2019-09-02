@@ -18,6 +18,10 @@ fn perlin_generate() -> Vec<f32> {
   p
 }
 
+fn ease_in_out(x: f32) -> f32 {
+  x * x * (3. - 2. * x)
+}
+
 // function to interpolate values and make the noise smooth
 fn trilinear_interp(c: [[[f32; 2]; 2]; 2], u: f32, v: f32, w: f32) -> f32 {
   let mut acc = 0.0;
@@ -28,7 +32,7 @@ fn trilinear_interp(c: [[[f32; 2]; 2]; 2], u: f32, v: f32, w: f32) -> f32 {
         let j = j_ as f32;
         let k = k_ as f32;
         acc +=
-          (i * u + (1. - j) * (1. - u)) *
+          (i * u + (1. - i) * (1. - u)) *
           (j * v + (1. - j) * (1. - v)) *
           (k * w + (1. - k) * (1. - w)) * c[i_][j_][k_]
       }
@@ -55,16 +59,16 @@ impl Perlin {
   }
 
   pub fn noise(&self, p: Vec3) -> f32 {
-    let u = p.x - p.x.floor();
-    let v = p.y - p.y.floor();
-    let w = p.z - p.z.floor();
+    let u = ease_in_out(p.x - p.x.floor());
+    let v = ease_in_out(p.y - p.y.floor());
+    let w = ease_in_out(p.z - p.z.floor());
     let i = p.x.floor() as usize;
     let j = p.y.floor() as usize;
     let k = p.z.floor() as usize;
     
     let mut c: [[[f32; 2]; 2]; 2] = [
-      [[0.0,0.0], [0.0,0.0]],
-      [[0.0,0.0], [0.0,0.0]]
+      [[0.0, 0.0], [0.0, 0.0]],
+      [[0.0, 0.0], [0.0, 0.0]]
     ];
 
     for di in 0..2 {
