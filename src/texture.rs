@@ -50,19 +50,21 @@ impl Texture for CheckedTexture {
 }
 
 pub struct NoiseTexture {
-  noise: Perlin
+  noise: Perlin,
+  scale: f32
 }
 
 impl NoiseTexture {
-  pub fn new() -> Self {
+  pub fn new(scale: f32) -> Self {
     NoiseTexture {
-      noise: Perlin::new()
+      noise: Perlin::new(),
+      scale
     }
   }
 }
 
 impl Texture for NoiseTexture {
   fn value(&self, _u: f32, _v: f32, point: Vec3) -> Vec3 {
-    return Vec3::fromf(1.) * self.noise.noise(point);
+    return Vec3::fromf(1.) * self.noise.noise(self.scale * point);
   }
 }

@@ -183,14 +183,14 @@ fn two_spheres() -> HitableList {
             Sphere::new(
                 Vec3::new(0., -1000., 0.),
                 1000.,
-                Arc::new(Lambertian::new(Box::new(NoiseTexture::new())))
+                Arc::new(Lambertian::new(Box::new(NoiseTexture::new(2.))))
             )
         ),
         Box::new(
            Sphere::new(
                 Vec3::new(0., 2., 0.),
                 2.,
-                Arc::new(Lambertian::new(Box::new(NoiseTexture::new())))
+                Arc::new(Lambertian::new(Box::new(NoiseTexture::new(2.))))
             )
         )
     ];
