@@ -62,9 +62,9 @@ impl Perlin {
     let u = ease_in_out(p.x - p.x.floor());
     let v = ease_in_out(p.y - p.y.floor());
     let w = ease_in_out(p.z - p.z.floor());
-    let i = p.x.floor() as usize;
-    let j = p.y.floor() as usize;
-    let k = p.z.floor() as usize;
+    let i = p.x.floor() as i32;
+    let j = p.y.floor() as i32;
+    let k = p.z.floor() as i32;
     
     let mut c: [[[f32; 2]; 2]; 2] = [
       [[0.0, 0.0], [0.0, 0.0]],
@@ -74,10 +74,13 @@ impl Perlin {
     for di in 0..2 {
       for dj in 0..2 {
         for dk in 0..2 {
+          // we have to convert to i32 because unsigned numbers (usize)
+          // don't support negative values, and p.x.floor() can be negative
+          // which results in a panic.
           let float_index: usize = (
-            self.perm_x[(i + di) & 255] ^
-            self.perm_y[(j + dj) & 255] ^
-            self.perm_z[(k + dk) & 255]
+            self.perm_x[((i + (di as i32)) & 255) as usize] ^
+            self.perm_y[((j + (dj as i32)) & 255) as usize] ^
+            self.perm_z[((k + (dk as i32)) & 255) as usize]
           ) as usize;
           c[di][dj][dk] = self.ran_float[float_index];
         }
