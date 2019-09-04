@@ -10,10 +10,17 @@ fn perlin_generate_perm() -> Vec<u32> {
   p.to_vec()
 }
 
-fn perlin_generate() -> Vec<f32> {
+// array of random unit vectors
+fn perlin_generate() -> Vec<Vec3> {
   let mut p = vec![];
   for _ in 0..256 {
-    p.push(thread_rng().gen::<f32>())
+    let rand_vec =
+      Vec3::new(
+        -1. + 2. * thread_rng().gen::<f32>(),
+        -1. + 2. * thread_rng().gen::<f32>(),
+        -1. + 2. * thread_rng().gen::<f32>(),
+      ).unit_vector();
+    p.push(rand_vec);
   }
   p
 }
@@ -23,18 +30,23 @@ fn ease_in_out(x: f32) -> f32 {
 }
 
 // function to interpolate values and make the noise smooth
-fn trilinear_interp(c: [[[f32; 2]; 2]; 2], u: f32, v: f32, w: f32) -> f32 {
+fn perlin_interp(c: [[[Vec3; 2]; 2]; 2], u: f32, v: f32, w: f32) -> f32 {
+  let uu = ease_in_out(u);
+  let vv = ease_in_out(v);
+  let ww = ease_in_out(w);
   let mut acc = 0.0;
-  for i_ in 0..2 {
-    for j_ in 0..2 {
-      for k_ in 0..2 {
-        let i = i_ as f32;
-        let j = j_ as f32;
-        let k = k_ as f32;
+  for i_usize in 0..2 {
+    for j_usize in 0..2 {
+      for k_usize in 0..2 {
+        let i = i_usize as f32;
+        let j = j_usize as f32;
+        let k = k_usize as f32;
+        let weight_v = Vec3::new(u - i, v - j, w - k);
         acc +=
-          (i * u + (1. - i) * (1. - u)) *
-          (j * v + (1. - j) * (1. - v)) *
-          (k * w + (1. - k) * (1. - w)) * c[i_][j_][k_]
+          (i * uu + (1. - i) * (1. - uu)) *
+          (j * vv + (1. - j) * (1. - vv)) *
+          (k * ww + (1. - k) * (1. - ww)) *
+          c[i_usize][j_usize][k_usize].dot(weight_v);
       }
     }
   }
@@ -45,7 +57,7 @@ pub struct Perlin {
   perm_x: Vec<u32>,
   perm_y: Vec<u32>,
   perm_z: Vec<u32>,
-  ran_float: Vec<f32>
+  ran_vec: Vec<Vec3>
 }
 
 impl Perlin {
@@ -54,21 +66,27 @@ impl Perlin {
       perm_x: perlin_generate_perm(),
       perm_y: perlin_generate_perm(),
       perm_z: perlin_generate_perm(),
-      ran_float: perlin_generate()
+      ran_vec: perlin_generate()
     }
   }
 
   pub fn noise(&self, p: Vec3) -> f32 {
-    let u = ease_in_out(p.x - p.x.floor());
-    let v = ease_in_out(p.y - p.y.floor());
-    let w = ease_in_out(p.z - p.z.floor());
+    let u = p.x - p.x.floor();
+    let v = p.y - p.y.floor();
+    let w = p.z - p.z.floor();
     let i = p.x.floor() as i32;
     let j = p.y.floor() as i32;
     let k = p.z.floor() as i32;
-    
-    let mut c: [[[f32; 2]; 2]; 2] = [
-      [[0.0, 0.0], [0.0, 0.0]],
-      [[0.0, 0.0], [0.0, 0.0]]
+
+    let mut c: [[[Vec3; 2]; 2]; 2] = [
+      [
+        [Vec3::fromf(0.), Vec3::fromf(0.)],
+        [Vec3::fromf(0.), Vec3::fromf(0.)]
+      ],
+      [
+        [Vec3::fromf(0.), Vec3::fromf(0.)],
+        [Vec3::fromf(0.), Vec3::fromf(0.)]
+      ]
     ];
 
     for di in 0..2 {
@@ -82,11 +100,25 @@ impl Perlin {
             self.perm_y[((j + (dj as i32)) & 255) as usize] ^
             self.perm_z[((k + (dk as i32)) & 255) as usize]
           ) as usize;
-          c[di][dj][dk] = self.ran_float[float_index];
+          c[di][dj][dk] = self.ran_vec[float_index];
         }
       }
     }
 
-    return trilinear_interp(c, u, v, w);
+    return perlin_interp(c, u, v, w);
+  }
+
+  pub fn turb(&self, p: Vec3) -> f32 {
+    let depth: i32 = 7;
+    let mut tmp_p = p;
+    let mut weight = 1.;
+    (0..depth)
+      .fold(0., |acc, _| {
+        let res = acc + weight*self.noise(tmp_p);
+        tmp_p *= 2.;
+        weight *= 0.5;
+        res
+      })
+      .abs()
   }
 }

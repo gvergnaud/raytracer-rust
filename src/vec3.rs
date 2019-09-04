@@ -1,5 +1,5 @@
 use std::cmp;
-use std::ops::{Add, Div, Mul, Neg, Sub, Index};
+use std::ops::{Add, Div, Mul, Neg, Sub, Index, MulAssign};
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Vec3 {
@@ -222,6 +222,14 @@ impl Mul<Vec3> for f32 {
             y: self * other.y,
             z: self * other.z,
         }
+    }
+}
+
+impl MulAssign<f32> for Vec3 {
+    fn mul_assign(&mut self, other: f32) {
+        self.x *= other;
+        self.y *= other;
+        self.z *= other;
     }
 }
 
