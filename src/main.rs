@@ -198,9 +198,9 @@ fn two_spheres() -> HitableList {
 }
 
 fn main() -> io::Result<()> {
-    let nx = 400;
-    let ny = 250;
-    let ns = 50;
+    let nx = 600;
+    let ny = 400;
+    let ns = 100;
 
     println!("P3\n{} {}\n255", nx, ny);
 
