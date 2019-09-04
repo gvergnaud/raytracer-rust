@@ -86,6 +86,17 @@ impl Add for Vec3 {
     }
 }
 
+impl<'a> Add<&'a Vec3> for Vec3 {
+    type Output = Vec3;
+    fn add(self, other: &'a Vec3) -> Vec3 {
+        Vec3 {
+            x: self.x + other.x,
+            y: self.y + other.y,
+            z: self.z + other.z,
+        }
+    }
+}
+
 impl Add<Vec3> for f32 {
     type Output = Vec3;
     fn add(self, other: Vec3) -> Vec3 {

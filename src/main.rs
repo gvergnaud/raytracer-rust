@@ -1,4 +1,5 @@
 extern crate rand;
+extern crate rayon;
 
 mod vec3;
 mod ray;
@@ -11,6 +12,7 @@ mod texture;
 mod noises;
 
 use rand::Rng;
+use rayon::prelude::*;
 
 use std::io;
 use std::sync::Arc;
@@ -188,9 +190,16 @@ fn two_spheres() -> HitableList {
         ),
         Box::new(
            Sphere::new(
-                Vec3::new(0., 2., 0.),
+                Vec3::new(0., 2., 3.),
                 2.,
                 Arc::new(Lambertian::new(Box::new(NoiseTexture::new(2.))))
+            )
+        ),
+        Box::new(
+           Sphere::new(
+                Vec3::new(1., 1.5, -2.5),
+                1.5,
+                Arc::new(Dielectric::new(1.5))
             )
         )
     ];
@@ -200,7 +209,7 @@ fn two_spheres() -> HitableList {
 fn main() -> io::Result<()> {
     let nx = 600;
     let ny = 400;
-    let ns = 100;
+    let ns = 50;
 
     println!("P3\n{} {}\n255", nx, ny);
 
@@ -212,10 +221,10 @@ fn main() -> io::Result<()> {
     let tree = BvhTree::new(&mut world, t_min, t_max);
 
     let camera = Camera::new(
-        Vec3::new(13., 2., 3.),
-        Vec3::fromf(0.),
+        Vec3::new(7., 2., -10.),
+        Vec3::new(0.25, 1., -1.5),
         Vec3::new(0., 1., 0.),
-        20.,
+        30.,
         (nx as f32) / (ny as f32),
         0.0,
         1.,
@@ -224,17 +233,21 @@ fn main() -> io::Result<()> {
 
     for j in (0..ny).rev() {
         for i in 0..nx {
-            let mut col = Vec3::fromf(0.);
+            let col = (0..ns)
+                .collect::<Vec<i32>>()
+                .par_iter()
+                .map(|_| {
+                    let mut rng = rand::thread_rng();
+                    let u = ((i as f32) + rng.gen::<f32>()) / (nx as f32);
+                    let v = ((j as f32) + rng.gen::<f32>()) / (ny as f32);
 
-            for _ in 0..ns {
-                let mut rng = rand::thread_rng();
-                let u = ((i as f32) + rng.gen::<f32>()) / (nx as f32);
-                let v = ((j as f32) + rng.gen::<f32>()) / (ny as f32);
+                    let r = camera.get_ray(u, v);
 
-                let r = camera.get_ray(u, v);
-
-                col = col + color(&r, &tree, 0);
-            }
+                    color(&r, &tree, 0)
+                })
+                .collect::<Vec<Vec3>>()
+                .iter()
+                .fold(Vec3::fromf(0.), |acc, x| acc + x);
 
             let rgb = (col / (ns as f32)).sqrt() * 255.99;
 
