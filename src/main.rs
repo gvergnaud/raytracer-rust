@@ -1,4 +1,5 @@
 extern crate rand;
+extern crate image;
 
 mod vec3;
 mod ray;

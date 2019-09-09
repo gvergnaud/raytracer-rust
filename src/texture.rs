@@ -1,5 +1,8 @@
 use vec3::{Vec3};
 use noises::{Perlin};
+use std::f32::consts::PI;
+use image;
+use std::path::Path;
 
 pub trait Texture {
   fn value(&self, u: f32, v: f32, p: Vec3) -> Vec3;
@@ -75,5 +78,52 @@ impl Texture for NoiseTexture {
     Vec3::fromf(1.) *
     0.5 *
     (1. + (self.scale * p.z + 10. * self.noise.turb(p)).sin())
+  }
+}
+
+
+fn get_sphere_uv(p: &Vec3) -> (f32, f32) {
+  // phi "left-right" angle of the point on the sphere
+  let phi =  p.z.atan2(p.x);
+  // theta is the up-down angle of the point on the sphere
+  let theta = p.y.asin();
+
+  let uv = (
+    1. - (phi + PI) / (2. * PI),
+    (theta + PI / 2.) / PI
+  );
+
+  uv
+}
+
+fn load_image(path: String) -> Vec<u8> {
+  let im = image::open(Path::new(path)).unwrap().to_rbg();
+  let rgb: Vec<u8> = im.raw_pixels();
+  rgb
+}
+
+struct ImageTexture {
+  data: Vec<u8>,
+  width: f32,
+  height: f32
+}
+
+impl Texture for ImageTexture {
+  fn value(&self, u: f32, v: f32, p: Vec3) -> Vec3 {
+    let mut i = u * self.width;
+    let mut j = (1. - v) * self.height - 0.001;
+    if i < 0. {
+      i = 0.;
+    }
+    if j < 0. {
+      j = 0.;
+    }
+    let pixel_offset = 3. * i + 3. * self.width * j;
+
+    let r = (self.data[(pixel_offset) as usize]) as f32 / 255.0;
+    let g = (self.data[(pixel_offset + 1.) as usize]) as f32 / 255.0;
+    let b = (self.data[(pixel_offset + 2.) as usize]) as f32 / 255.0;
+
+    Vec3::new(r, g, b)
   }
 }
